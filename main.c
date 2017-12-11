@@ -103,12 +103,19 @@ void usage()
         "    forces gamemode to taiko for converted maps\n"
         "    default: disabled\n"
         "\n"
+        "-touch\n"
+        "    calculates pp for touchscreen / touch devices. can \n"
+        "    also be specified as mod TD\n"
+        "\n"
         "[n]speed\n"
         "    override speed stars. "
         "useful for maps with incorrect star rating\n"
         "    default: uses computed speed stars\n"
         "    example: 3.5speed\n"
         "\n"
+    );
+
+    info(
         "[n]aim\n"
         "    override aim stars. "
         "useful for maps with incorrect star rating\n"
@@ -1009,21 +1016,42 @@ int main(int argc, char* argv[])
             continue;
         }
 
+        if (!strcmp(a, "-touch")) {
+            mods |= MODS_TOUCH_DEVICE;
+            continue;
+        }
+
         /* this should be last because it uppercase's the string */
         if (*a == '+')
         {
-            for (p = a; *p; ++p) {
+            mods_str = a + 1;
+
+            for (p = mods_str; *p; ++p) {
                 *p = uppercase(*p);
             }
 
 #           define m(mod) \
-            if (strstr(a + 1, #mod)) { mods |= MODS_##mod; } \
+            if (!strncmp(p, #mod, strlen(#mod))) { \
+                mods |= MODS_##mod; \
+                p += strlen(#mod); \
+                continue; \
+            } \
 
-            m(NF) m(EZ) m(HD) m(HR) m(DT) m(HT) m(NC) m(FL) m(SO)
-            m(NOMOD)
+            for (p = mods_str; *p;)
+            {
+                m(NF) m(EZ) m(HD) m(HR) m(DT) m(HT) m(NC) m(FL)
+                m(SO) m(NOMOD)
+
+                if (!strncmp(p, "TD", 2)) {
+                    mods |= MODS_TOUCH_DEVICE;
+                    p += 2;
+                    continue;
+                }
+
+                ++p;
+            }
 #undef m
 
-            mods_str = a + 1;
             continue;
         }
 
